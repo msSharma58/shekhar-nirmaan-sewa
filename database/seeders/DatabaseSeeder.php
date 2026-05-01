@@ -35,16 +35,61 @@ class DatabaseSeeder extends Seeder
 
         // ── PROJECTS ──
         $projects = [
-            ['title' => 'Modern Family Villa – Butwal',       'category' => 'residential', 'location' => 'Butwal, Rupandehi',       'image_url' => 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&q=80'],
-            ['title' => 'Office Complex – Bhairahawa',        'category' => 'commercial',  'location' => 'Bhairahawa, Rupandehi',   'image_url' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&q=80'],
-            ['title' => 'Heritage Building Restoration',      'category' => 'renovation',  'location' => 'Lumbini Province',        'image_url' => 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80'],
-            ['title' => 'Rural Road Infrastructure',          'category' => 'civil',       'location' => 'Rupandehi District',      'image_url' => 'https://images.unsplash.com/photo-1565008447742-97f6f38c985c?w=600&q=80'],
-            ['title' => 'Luxury Apartment – Rupandehi',       'category' => 'residential', 'location' => 'Rupandehi',               'image_url' => 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&q=80'],
-            ['title' => 'Shopping Plaza – Butwal',            'category' => 'commercial',  'location' => 'Butwal, Rupandehi',       'image_url' => 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=600&q=80'],
+            [
+                'title' => 'Modern Family Villa – Butwal',
+                'location' => 'Butwal, Rupandehi',
+                'category' => 'residential',
+                'status' => 'completed',
+                'image_url' => 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&q=80',
+                'description' => 'A 2.5-storey modern villa designed for a joint family with seismic-safe RCC framing, natural ventilation, and premium exterior finish.',
+                'is_featured' => true,
+                'gallery_images' => [
+                    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80',
+                    'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1200&q=80',
+                ],
+            ],
+            [
+                'title' => 'Office Complex – Bhairahawa',
+                'location' => 'Bhairahawa, Rupandehi',
+                'category' => 'commercial',
+                'status' => 'ongoing',
+                'image_url' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&q=80',
+                'description' => 'A multi-tenant office complex with flexible floor plates, efficient MEP planning, and modern facade systems tailored for business use.',
+                'is_featured' => true,
+                'gallery_images' => [
+                    'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1200&q=80',
+                    'https://images.unsplash.com/photo-1497215842964-222b430dc094?w=1200&q=80',
+                ],
+            ],
+            [
+                'title' => 'Heritage Building Restoration',
+                'location' => 'Lumbini Province',
+                'category' => 'renovation',
+                'status' => 'completed',
+                'image_url' => 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
+                'description' => 'Careful structural retrofitting and facade restoration preserving original character while upgrading safety and utilities.',
+                'is_featured' => true,
+                'gallery_images' => [
+                    'https://images.unsplash.com/photo-1460317442991-0ec209397118?w=1200&q=80',
+                    'https://images.unsplash.com/photo-1479839672679-a46483c0e7c8?w=1200&q=80',
+                ],
+            ],
+            [
+                'title' => 'Rural Road Infrastructure',
+                'location' => 'Rupandehi District',
+                'category' => 'civil',
+                'status' => 'planning',
+                'image_url' => 'https://images.unsplash.com/photo-1565008447742-97f6f38c985c?w=600&q=80',
+                'description' => 'Community road upgrade project including drainage, retaining structures, and durable surface treatment for all-weather access.',
+                'is_featured' => false,
+                'gallery_images' => [],
+            ],
         ];
-
         foreach ($projects as $project) {
-            Project::create($project);
+            Project::updateOrCreate(
+                ['title' => $project['title']],
+                $project
+            );
         }
 
         // ── TESTIMONIALS ──
