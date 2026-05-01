@@ -45,11 +45,16 @@
   <div class="c-card-head"><div class="c-card-title">Thumbnail</div></div>
   <div class="c-card-body">
     @if($project->image_url)
+      @php
+        $mainThumbPath = pathinfo($project->image_url, PATHINFO_DIRNAME) === '.'
+          ? pathinfo($project->image_url, PATHINFO_FILENAME).'_thumb.webp'
+          : pathinfo($project->image_url, PATHINFO_DIRNAME).'/'.pathinfo($project->image_url, PATHINFO_FILENAME).'_thumb.webp';
+      @endphp
       <img
-        src="{{ Str::startsWith($project->image_url, 'http') ? $project->image_url : Storage::url($project->image_url) }}"
+        src="{{ str_starts_with($project->image_url, 'http') ? $project->image_url : Storage::url($mainThumbPath) }}"
         alt="{{ $project->title }} thumbnail"
         style="width:280px;height:180px;object-fit:cover;border:1px solid var(--border2);"
-        onerror="this.style.display='none'"
+        onerror="this.onerror=null;this.src='{{ str_starts_with($project->image_url, 'http') ? $project->image_url : Storage::url($project->image_url) }}'"
       >
     @else
       <div style="color:var(--muted);">No thumbnail image uploaded.</div>
@@ -63,11 +68,16 @@
     @if(!empty($project->gallery_images))
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">
         @foreach($project->gallery_images as $galleryImage)
+          @php
+            $galleryThumbPath = pathinfo($galleryImage, PATHINFO_DIRNAME) === '.'
+              ? pathinfo($galleryImage, PATHINFO_FILENAME).'_thumb.webp'
+              : pathinfo($galleryImage, PATHINFO_DIRNAME).'/'.pathinfo($galleryImage, PATHINFO_FILENAME).'_thumb.webp';
+          @endphp
           <img
-            src="{{ Str::startsWith($galleryImage, 'http') ? $galleryImage : Storage::url($galleryImage) }}"
+            src="{{ str_starts_with($galleryImage, 'http') ? $galleryImage : Storage::url($galleryThumbPath) }}"
             alt="{{ $project->title }} gallery image"
             style="width:100%;height:140px;object-fit:cover;border:1px solid var(--border2);"
-            onerror="this.style.display='none'"
+            onerror="this.onerror=null;this.src='{{ str_starts_with($galleryImage, 'http') ? $galleryImage : Storage::url($galleryImage) }}'"
           >
         @endforeach
       </div>

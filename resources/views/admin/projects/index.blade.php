@@ -42,7 +42,16 @@
         <tr>
           <td>
             @if($project->image_url)
-              <img src="{{ Storage::url($project->image_url) }}" style="width:60px;height:44px;object-fit:cover;border:1px solid var(--border);" onerror="this.src='{{ $project->image_url }}'">
+              @php
+                $thumbPath = pathinfo($project->image_url, PATHINFO_DIRNAME) === '.'
+                  ? pathinfo($project->image_url, PATHINFO_FILENAME).'_thumb.webp'
+                  : pathinfo($project->image_url, PATHINFO_DIRNAME).'/'.pathinfo($project->image_url, PATHINFO_FILENAME).'_thumb.webp';
+              @endphp
+              <img
+                src="{{ str_starts_with($project->image_url, 'http') ? $project->image_url : Storage::url($thumbPath) }}"
+                style="width:60px;height:44px;object-fit:cover;border:1px solid var(--border);"
+                onerror="this.onerror=null;this.src='{{ str_starts_with($project->image_url, 'http') ? $project->image_url : Storage::url($project->image_url) }}'"
+              >
             @else
               <div style="width:60px;height:44px;background:var(--card2);display:flex;align-items:center;justify-content:center;border:1px dashed var(--border2);">
                 <i class="fas fa-image" style="color:var(--muted);font-size:.8rem;"></i>

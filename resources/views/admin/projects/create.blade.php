@@ -96,6 +96,7 @@
           <label>Upload Multiple Images</label>
           <input type="file" name="gallery_images[]" id="galleryImages" accept="image/*" multiple>
           <small style="display:block;margin-top:8px;color:var(--muted);">You can select multiple images. These will appear on the project detail page.</small>
+          <small style="display:block;margin-top:6px;color:var(--muted);">Images are optimized in the background after save. Thumbnails may take a short time to appear.</small>
           @error('gallery_images')<div class="field-error" style="margin-top:8px;">{{ $message }}</div>@enderror
           @error('gallery_images.*')<div class="field-error" style="margin-top:8px;">{{ $message }}</div>@enderror
         </div>
@@ -139,59 +140,11 @@ dz.addEventListener('drop', e => {
   previewImg(document.getElementById('imageFile'));
 });
 
-async function compressImageFile(file, maxWidth = 1600, quality = 0.8) {
-  if (!file || !file.type.startsWith('image/')) return file;
-  if (file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
-
-  const imageBitmap = await createImageBitmap(file);
-  const ratio = Math.min(1, maxWidth / imageBitmap.width);
-  const targetWidth = Math.max(1, Math.round(imageBitmap.width * ratio));
-  const targetHeight = Math.max(1, Math.round(imageBitmap.height * ratio));
-
-  const canvas = document.createElement('canvas');
-  canvas.width = targetWidth;
-  canvas.height = targetHeight;
-  const ctx = canvas.getContext('2d', { alpha: true });
-  ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
-
-  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
-  if (!blob) return file;
-
-  const optimizedName = file.name.replace(/\.[^.]+$/, '') + '.webp';
-  const optimizedFile = new File([blob], optimizedName, { type: 'image/webp', lastModified: Date.now() });
-
-  return optimizedFile.size < file.size ? optimizedFile : file;
-}
-
-async function optimizeInputFiles(input, multiple = false) {
-  const files = Array.from(input.files ?? []);
-  if (!files.length) return;
-
-  const optimized = multiple
-    ? await Promise.all(files.map(file => compressImageFile(file)))
-    : [await compressImageFile(files[0])];
-
-  const transfer = new DataTransfer();
-  optimized.forEach(file => transfer.items.add(file));
-  input.files = transfer.files;
-}
-
 const projectForm = document.getElementById('projectForm');
-projectForm.addEventListener('submit', async function (e) {
-  if (projectForm.dataset.optimized === '1') return;
-  e.preventDefault();
-
+projectForm.addEventListener('submit', function () {
   const submitBtn = projectForm.querySelector('button[type="submit"]');
   submitBtn.disabled = true;
-  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Optimizing...';
-
-  try {
-    await optimizeInputFiles(document.getElementById('imageFile'), false);
-    await optimizeInputFiles(document.getElementById('galleryImages'), true);
-    projectForm.dataset.optimized = '1';
-  } finally {
-    projectForm.submit();
-  }
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
 });
 </script>
 @endpush

@@ -16,7 +16,7 @@
 {{-- Upload Form (hidden trigger) --}}
 <form action="{{ route('admin.media.store') }}" method="POST" enctype="multipart/form-data" id="mediaUploadForm">
   @csrf
-  <input type="file" name="files[]" id="mediaUpload" multiple accept="image/*" style="display:none;" onchange="prepareAndSubmitMedia()">
+  <input type="file" name="files[]" id="mediaUpload" multiple accept="image/*" style="display:none;" onchange="submitMediaUpload()">
 </form>
 
 {{-- Upload Drop Zone --}}
@@ -32,7 +32,16 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;">
       @foreach($media as $file)
       <div class="media-thumb" style="position:relative;cursor:pointer;border:1px solid var(--border);" title="{{ $file->file_name }}">
-        <img src="{{ Storage::url($file->file_path) }}" style="width:100%;height:110px;object-fit:cover;display:block;">
+        @php
+          $thumbPath = pathinfo($file->file_path, PATHINFO_DIRNAME) === '.'
+            ? pathinfo($file->file_path, PATHINFO_FILENAME).'_thumb.webp'
+            : pathinfo($file->file_path, PATHINFO_DIRNAME).'/'.pathinfo($file->file_path, PATHINFO_FILENAME).'_thumb.webp';
+        @endphp
+        <img
+          src="{{ Storage::url($thumbPath) }}"
+          style="width:100%;height:110px;object-fit:cover;display:block;"
+          onerror="this.onerror=null;this.src='{{ Storage::url($file->file_path) }}';"
+        >
         <div style="padding:8px;background:var(--card2);border-top:1px solid var(--border);">
           <div style="font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $file->file_name }}</div>
           <div style="font-size:.66rem;color:var(--muted);margin-top:2px;">{{ round($file->file_size / 1024) }} KB</div>
@@ -70,56 +79,14 @@
 
 @push('scripts')
 <script>
-const mediaForm = document.getElementById('mediaUploadForm');
-const mediaInput = document.getElementById('mediaUpload');
-let isUploading = false;
-
-async function compressImageFile(file, maxWidth = 1600, quality = 0.8) {
-  if (!file || !file.type.startsWith('image/')) return file;
-  if (file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
-
-  const imageBitmap = await createImageBitmap(file);
-  const ratio = Math.min(1, maxWidth / imageBitmap.width);
-  const targetWidth = Math.max(1, Math.round(imageBitmap.width * ratio));
-  const targetHeight = Math.max(1, Math.round(imageBitmap.height * ratio));
-
-  const canvas = document.createElement('canvas');
-  canvas.width = targetWidth;
-  canvas.height = targetHeight;
-  const ctx = canvas.getContext('2d', { alpha: true });
-  ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
-
-  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
-  if (!blob) return file;
-
-  const optimizedName = file.name.replace(/\.[^.]+$/, '') + '.webp';
-  const optimizedFile = new File([blob], optimizedName, { type: 'image/webp', lastModified: Date.now() });
-
-  return optimizedFile.size < file.size ? optimizedFile : file;
-}
-
-async function prepareAndSubmitMedia(filesOverride = null) {
-  if (isUploading) return;
-  isUploading = true;
-
+function submitMediaUpload() {
+  const mediaForm = document.getElementById('mediaUploadForm');
   const uploadBtn = document.querySelector('.btn.btn-primary2');
   if (uploadBtn) {
     uploadBtn.disabled = true;
-    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Optimizing...';
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
   }
-
-  try {
-    const files = filesOverride ?? Array.from(mediaInput.files ?? []);
-    if (!files.length) return;
-
-    const optimizedFiles = await Promise.all(files.map(file => compressImageFile(file)));
-    const transfer = new DataTransfer();
-    optimizedFiles.forEach(file => transfer.items.add(file));
-    mediaInput.files = transfer.files;
-    mediaForm.submit();
-  } catch (e) {
-    mediaForm.submit();
-  }
+  mediaForm.submit();
 }
 
 // Hover to show media actions
@@ -150,7 +117,10 @@ dz.addEventListener('drop', ev => {
   const droppedFiles = Array.from(dt.files ?? []);
   const imageFiles = droppedFiles.filter(file => file.type?.startsWith('image/'));
   if (!imageFiles.length) return;
-  prepareAndSubmitMedia(imageFiles);
+  const transfer = new DataTransfer();
+  imageFiles.forEach(file => transfer.items.add(file));
+  document.getElementById('mediaUpload').files = transfer.files;
+  submitMediaUpload();
 });
 </script>
 @endpush

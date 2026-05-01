@@ -65,12 +65,17 @@
 
         {{-- Current Image --}}
         @if($project->image_url)
+        @php
+          $mainThumbPath = pathinfo($project->image_url, PATHINFO_DIRNAME) === '.'
+            ? pathinfo($project->image_url, PATHINFO_FILENAME).'_thumb.webp'
+            : pathinfo($project->image_url, PATHINFO_DIRNAME).'/'.pathinfo($project->image_url, PATHINFO_FILENAME).'_thumb.webp';
+        @endphp
         <div style="margin-bottom:18px;">
           <div style="font-family:var(--font-c);font-size:.7rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Current Image</div>
           <img id="currentImg"
-            src="{{ Str::startsWith($project->image_url, 'http') ? $project->image_url : Storage::url($project->image_url) }}"
+            src="{{ str_starts_with($project->image_url, 'http') ? $project->image_url : Storage::url($mainThumbPath) }}"
             style="width:220px;height:150px;object-fit:cover;border:1px solid var(--border2);"
-            onerror="this.style.display='none'">
+            onerror="this.onerror=null;this.src='{{ str_starts_with($project->image_url, 'http') ? $project->image_url : Storage::url($project->image_url) }}'">
           <div style="font-size:.75rem;color:var(--muted);margin-top:6px;">Upload below to replace this image.</div>
         </div>
         @endif
@@ -108,12 +113,17 @@
             <div style="font-family:var(--font-c);font-size:.7rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Current Gallery</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">
               @foreach($project->gallery_images as $galleryImage)
+                @php
+                  $galleryThumbPath = pathinfo($galleryImage, PATHINFO_DIRNAME) === '.'
+                    ? pathinfo($galleryImage, PATHINFO_FILENAME).'_thumb.webp'
+                    : pathinfo($galleryImage, PATHINFO_DIRNAME).'/'.pathinfo($galleryImage, PATHINFO_FILENAME).'_thumb.webp';
+                @endphp
                 <label style="position:relative;display:block;cursor:pointer;">
                   <img
-                    src="{{ Str::startsWith($galleryImage, 'http') ? $galleryImage : Storage::url($galleryImage) }}"
+                    src="{{ str_starts_with($galleryImage, 'http') ? $galleryImage : Storage::url($galleryThumbPath) }}"
                     alt="Project gallery image"
                     style="width:100%;height:100px;object-fit:cover;border:1px solid var(--border2);"
-                    onerror="this.style.display='none'"
+                    onerror="this.onerror=null;this.src='{{ str_starts_with($galleryImage, 'http') ? $galleryImage : Storage::url($galleryImage) }}'"
                   >
                   <span style="position:absolute;top:6px;left:6px;background:rgba(13,13,13,.85);color:var(--white);font-size:.7rem;padding:3px 8px;border:1px solid var(--border2);">Remove</span>
                   <input type="checkbox" name="remove_gallery_images[]" value="{{ $galleryImage }}" style="position:absolute;top:8px;right:8px;width:16px;height:16px;accent-color:var(--orange);">
@@ -128,6 +138,7 @@
           <label>Upload Additional Gallery Images</label>
           <input type="file" name="gallery_images[]" id="galleryImages" accept="image/*" multiple>
           <small style="display:block;margin-top:8px;color:var(--muted);">New uploads will be added to the existing gallery.</small>
+          <small style="display:block;margin-top:6px;color:var(--muted);">New images are optimized in the background after update. Thumbnails may take a short time to appear.</small>
           @error('gallery_images')<div class="field-error" style="margin-top:8px;">{{ $message }}</div>@enderror
           @error('gallery_images.*')<div class="field-error" style="margin-top:8px;">{{ $message }}</div>@enderror
         </div>
@@ -171,59 +182,11 @@ dz.addEventListener('drop', e => {
   previewImg(document.getElementById('imageFile'));
 });
 
-async function compressImageFile(file, maxWidth = 1600, quality = 0.8) {
-  if (!file || !file.type.startsWith('image/')) return file;
-  if (file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
-
-  const imageBitmap = await createImageBitmap(file);
-  const ratio = Math.min(1, maxWidth / imageBitmap.width);
-  const targetWidth = Math.max(1, Math.round(imageBitmap.width * ratio));
-  const targetHeight = Math.max(1, Math.round(imageBitmap.height * ratio));
-
-  const canvas = document.createElement('canvas');
-  canvas.width = targetWidth;
-  canvas.height = targetHeight;
-  const ctx = canvas.getContext('2d', { alpha: true });
-  ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
-
-  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
-  if (!blob) return file;
-
-  const optimizedName = file.name.replace(/\.[^.]+$/, '') + '.webp';
-  const optimizedFile = new File([blob], optimizedName, { type: 'image/webp', lastModified: Date.now() });
-
-  return optimizedFile.size < file.size ? optimizedFile : file;
-}
-
-async function optimizeInputFiles(input, multiple = false) {
-  const files = Array.from(input.files ?? []);
-  if (!files.length) return;
-
-  const optimized = multiple
-    ? await Promise.all(files.map(file => compressImageFile(file)))
-    : [await compressImageFile(files[0])];
-
-  const transfer = new DataTransfer();
-  optimized.forEach(file => transfer.items.add(file));
-  input.files = transfer.files;
-}
-
 const projectForm = document.getElementById('projectForm');
-projectForm.addEventListener('submit', async function (e) {
-  if (projectForm.dataset.optimized === '1') return;
-  e.preventDefault();
-
+projectForm.addEventListener('submit', function () {
   const submitBtn = projectForm.querySelector('button[type="submit"]');
   submitBtn.disabled = true;
-  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Optimizing...';
-
-  try {
-    await optimizeInputFiles(document.getElementById('imageFile'), false);
-    await optimizeInputFiles(document.getElementById('galleryImages'), true);
-    projectForm.dataset.optimized = '1';
-  } finally {
-    projectForm.submit();
-  }
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
 });
 </script>
 @endpush

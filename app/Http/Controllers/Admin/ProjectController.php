@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Jobs\OptimizeImageJob;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -47,6 +48,7 @@ class ProjectController extends Controller
         // Handle file upload
         if ($request->hasFile('image')) {
             $data['image_url'] = $request->file('image')->store('projects', 'public');
+            OptimizeImageJob::dispatch('public', $data['image_url']);
         } elseif ($request->filled('image_url_external')) {
             $data['image_url'] = $request->image_url_external;
         }
@@ -56,6 +58,10 @@ class ProjectController extends Controller
                 ->map(fn($file) => $file->store('projects/gallery', 'public'))
                 ->values()
                 ->all();
+
+            foreach ($data['gallery_images'] as $galleryImagePath) {
+                OptimizeImageJob::dispatch('public', $galleryImagePath);
+            }
         }
 
         $data['is_featured'] = $request->boolean('is_featured');
@@ -89,8 +95,10 @@ class ProjectController extends Controller
             // Delete old file if stored locally
             if ($project->image_url && !str_starts_with($project->image_url, 'http')) {
                 Storage::disk('public')->delete($project->image_url);
+                Storage::disk('public')->delete($this->thumbnailPath($project->image_url));
             }
             $data['image_url'] = $request->file('image')->store('projects', 'public');
+            OptimizeImageJob::dispatch('public', $data['image_url']);
         } elseif ($request->filled('image_url_external')) {
             $data['image_url'] = $request->image_url_external;
         }
@@ -105,6 +113,7 @@ class ProjectController extends Controller
             foreach ($imagesToRemove as $imageToRemove) {
                 if (!str_starts_with($imageToRemove, 'http')) {
                     Storage::disk('public')->delete($imageToRemove);
+                    Storage::disk('public')->delete($this->thumbnailPath($imageToRemove));
                 }
             }
 
@@ -116,6 +125,10 @@ class ProjectController extends Controller
                 $newGalleryImages = collect($request->file('gallery_images'))
                     ->map(fn($file) => $file->store('projects/gallery', 'public'))
                     ->values();
+
+                foreach ($newGalleryImages as $newGalleryImagePath) {
+                    OptimizeImageJob::dispatch('public', $newGalleryImagePath);
+                }
 
                 $remainingGalleryImages = $remainingGalleryImages->concat($newGalleryImages)->values();
             }
@@ -136,10 +149,12 @@ class ProjectController extends Controller
     {
         if ($project->image_url && !str_starts_with($project->image_url, 'http')) {
             Storage::disk('public')->delete($project->image_url);
+            Storage::disk('public')->delete($this->thumbnailPath($project->image_url));
         }
         foreach (($project->gallery_images ?? []) as $galleryImage) {
             if (!str_starts_with($galleryImage, 'http')) {
                 Storage::disk('public')->delete($galleryImage);
+                Storage::disk('public')->delete($this->thumbnailPath($galleryImage));
             }
         }
         $project->delete();
@@ -154,5 +169,14 @@ class ProjectController extends Controller
         Cache::forget('home.index.payload');
         Cache::forget('admin.dashboard.stats');
         return back();
+    }
+
+    private function thumbnailPath(string $path): string
+    {
+        $dirname = pathinfo($path, PATHINFO_DIRNAME);
+        $filename = pathinfo($path, PATHINFO_FILENAME);
+        $dirPrefix = $dirname === '.' ? '' : ($dirname . '/');
+
+        return $dirPrefix . $filename . '_thumb.webp';
     }
 }
