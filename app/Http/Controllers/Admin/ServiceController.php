@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class ServiceController extends Controller
 {
@@ -24,6 +24,8 @@ class ServiceController extends Controller
             'sort_order'  => 'nullable|integer',
         ]);
         Service::create($request->only('title', 'description', 'icon', 'sort_order'));
+        Cache::forget('home.index.payload');
+        Cache::forget('admin.dashboard.stats');
         return back()->with('success', 'Service added!');
     }
 
@@ -36,12 +38,16 @@ class ServiceController extends Controller
             'sort_order'  => 'nullable|integer',
         ]);
         $service->update($request->only('title', 'description', 'icon', 'sort_order'));
+        Cache::forget('home.index.payload');
+        Cache::forget('admin.dashboard.stats');
         return back()->with('success', 'Service updated!');
     }
 
     public function destroy(Service $service)
     {
         $service->delete();
+        Cache::forget('home.index.payload');
+        Cache::forget('admin.dashboard.stats');
         return back()->with('success', 'Service deleted.');
     }
 }

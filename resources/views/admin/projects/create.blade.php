@@ -5,7 +5,7 @@
 
 @section('content')
 <div style="max-width:860px;">
-  <form action="{{ route('admin.projects.store') }}" method="POST" enctype="multipart/form-data">
+  <form action="{{ route('admin.projects.store') }}" method="POST" enctype="multipart/form-data" id="projectForm">
     @csrf
 
     <div class="c-card" style="margin-bottom:20px;">
@@ -137,6 +137,61 @@ const dz = document.getElementById('dropZone');
 dz.addEventListener('drop', e => {
   document.getElementById('imageFile').files = e.dataTransfer.files;
   previewImg(document.getElementById('imageFile'));
+});
+
+async function compressImageFile(file, maxWidth = 1600, quality = 0.8) {
+  if (!file || !file.type.startsWith('image/')) return file;
+  if (file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
+
+  const imageBitmap = await createImageBitmap(file);
+  const ratio = Math.min(1, maxWidth / imageBitmap.width);
+  const targetWidth = Math.max(1, Math.round(imageBitmap.width * ratio));
+  const targetHeight = Math.max(1, Math.round(imageBitmap.height * ratio));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const ctx = canvas.getContext('2d', { alpha: true });
+  ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
+  if (!blob) return file;
+
+  const optimizedName = file.name.replace(/\.[^.]+$/, '') + '.webp';
+  const optimizedFile = new File([blob], optimizedName, { type: 'image/webp', lastModified: Date.now() });
+
+  return optimizedFile.size < file.size ? optimizedFile : file;
+}
+
+async function optimizeInputFiles(input, multiple = false) {
+  const files = Array.from(input.files ?? []);
+  if (!files.length) return;
+
+  const optimized = multiple
+    ? await Promise.all(files.map(file => compressImageFile(file)))
+    : [await compressImageFile(files[0])];
+
+  const transfer = new DataTransfer();
+  optimized.forEach(file => transfer.items.add(file));
+  input.files = transfer.files;
+}
+
+const projectForm = document.getElementById('projectForm');
+projectForm.addEventListener('submit', async function (e) {
+  if (projectForm.dataset.optimized === '1') return;
+  e.preventDefault();
+
+  const submitBtn = projectForm.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Optimizing...';
+
+  try {
+    await optimizeInputFiles(document.getElementById('imageFile'), false);
+    await optimizeInputFiles(document.getElementById('galleryImages'), true);
+    projectForm.dataset.optimized = '1';
+  } finally {
+    projectForm.submit();
+  }
 });
 </script>
 @endpush

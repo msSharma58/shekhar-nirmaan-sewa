@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Testimonial;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Cache;
 
 class TestimonialController extends Controller
 {
@@ -27,6 +28,8 @@ class TestimonialController extends Controller
             ...$request->only('name', 'location', 'message', 'rating'),
             'is_active' => $request->boolean('is_active'),
         ]);
+        Cache::forget('home.index.payload');
+        Cache::forget('admin.dashboard.stats');
         return back()->with('success', 'Testimonial added!');
     }
 
@@ -43,18 +46,24 @@ class TestimonialController extends Controller
             ...$request->only('name', 'location', 'message', 'rating'),
             'is_active' => $request->boolean('is_active'),
         ]);
+        Cache::forget('home.index.payload');
+        Cache::forget('admin.dashboard.stats');
         return back()->with('success', 'Testimonial updated!');
     }
 
     public function destroy(Testimonial $testimonial)
     {
         $testimonial->delete();
+        Cache::forget('home.index.payload');
+        Cache::forget('admin.dashboard.stats');
         return back()->with('success', 'Testimonial deleted.');
     }
 
     public function toggle(Testimonial $testimonial)
     {
         $testimonial->update(['is_active' => !$testimonial->is_active]);
+        Cache::forget('home.index.payload');
+        Cache::forget('admin.dashboard.stats');
         return back();
     }
 }

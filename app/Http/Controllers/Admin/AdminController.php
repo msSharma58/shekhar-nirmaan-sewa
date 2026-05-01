@@ -9,24 +9,29 @@ use App\Models\Service;
 use App\Models\Testimonial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 class AdminController extends Controller
 {
     public function dashboard()
     {
-        return view('admin.dashboard', [
-            'totalProjects'    => Project::count(),
-            'totalServices'    => Service::count(),
-            'totalTestimonials'=> Testimonial::where('is_active', true)->count(),
-            'unreadMessages'   => Contact::where('is_read', false)->count(),
-            'recentProjects'   => Project::latest()->take(5)->get(),
-            'recentMessages'   => Contact::latest()->take(5)->get(),
-            'monthlyStats'     => Contact::selectRaw('MONTHNAME(created_at) as month, COUNT(*) as count')
-                ->whereYear('created_at', date('Y'))
-                ->groupBy('month')
-                ->pluck('count', 'month')
-                ->toArray(),
-        ]);
+        $stats = Cache::remember('admin.dashboard.stats', now()->addSeconds(45), function () {
+            return [
+                'totalProjects'    => Project::count(),
+                'totalServices'    => Service::count(),
+                'totalTestimonials'=> Testimonial::where('is_active', true)->count(),
+                'unreadMessages'   => Contact::where('is_read', false)->count(),
+                'recentProjects'   => Project::latest()->take(5)->get(),
+                'recentMessages'   => Contact::latest()->take(5)->get(),
+                'monthlyStats'     => Contact::selectRaw('MONTHNAME(created_at) as month, COUNT(*) as count')
+                    ->whereYear('created_at', date('Y'))
+                    ->groupBy('month')
+                    ->pluck('count', 'month')
+                    ->toArray(),
+            ];
+        });
+
+        return view('admin.dashboard', $stats);
     }
 
     public function login()  {

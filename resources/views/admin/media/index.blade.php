@@ -16,7 +16,7 @@
 {{-- Upload Form (hidden trigger) --}}
 <form action="{{ route('admin.media.store') }}" method="POST" enctype="multipart/form-data" id="mediaUploadForm">
   @csrf
-  <input type="file" name="files[]" id="mediaUpload" multiple accept="image/*" style="display:none;" onchange="this.form.submit()">
+  <input type="file" name="files[]" id="mediaUpload" multiple accept="image/*" style="display:none;" onchange="prepareAndSubmitMedia()">
 </form>
 
 {{-- Upload Drop Zone --}}
@@ -70,6 +70,58 @@
 
 @push('scripts')
 <script>
+const mediaForm = document.getElementById('mediaUploadForm');
+const mediaInput = document.getElementById('mediaUpload');
+let isUploading = false;
+
+async function compressImageFile(file, maxWidth = 1600, quality = 0.8) {
+  if (!file || !file.type.startsWith('image/')) return file;
+  if (file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
+
+  const imageBitmap = await createImageBitmap(file);
+  const ratio = Math.min(1, maxWidth / imageBitmap.width);
+  const targetWidth = Math.max(1, Math.round(imageBitmap.width * ratio));
+  const targetHeight = Math.max(1, Math.round(imageBitmap.height * ratio));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const ctx = canvas.getContext('2d', { alpha: true });
+  ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
+  if (!blob) return file;
+
+  const optimizedName = file.name.replace(/\.[^.]+$/, '') + '.webp';
+  const optimizedFile = new File([blob], optimizedName, { type: 'image/webp', lastModified: Date.now() });
+
+  return optimizedFile.size < file.size ? optimizedFile : file;
+}
+
+async function prepareAndSubmitMedia(filesOverride = null) {
+  if (isUploading) return;
+  isUploading = true;
+
+  const uploadBtn = document.querySelector('.btn.btn-primary2');
+  if (uploadBtn) {
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Optimizing...';
+  }
+
+  try {
+    const files = filesOverride ?? Array.from(mediaInput.files ?? []);
+    if (!files.length) return;
+
+    const optimizedFiles = await Promise.all(files.map(file => compressImageFile(file)));
+    const transfer = new DataTransfer();
+    optimizedFiles.forEach(file => transfer.items.add(file));
+    mediaInput.files = transfer.files;
+    mediaForm.submit();
+  } catch (e) {
+    mediaForm.submit();
+  }
+}
+
 // Hover to show media actions
 document.querySelectorAll('.media-thumb').forEach(t => {
   t.addEventListener('mouseenter', () => t.querySelector('.media-actions').style.opacity = '1');
@@ -95,9 +147,10 @@ const dz = document.getElementById('mediaDropZone');
 ['dragleave','drop'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.style.borderColor = ''; }));
 dz.addEventListener('drop', ev => {
   const dt = ev.dataTransfer;
-  const input = document.getElementById('mediaUpload');
-  input.files = dt.files;
-  document.getElementById('mediaUploadForm').submit();
+  const droppedFiles = Array.from(dt.files ?? []);
+  const imageFiles = droppedFiles.filter(file => file.type?.startsWith('image/'));
+  if (!imageFiles.length) return;
+  prepareAndSubmitMedia(imageFiles);
 });
 </script>
 @endpush

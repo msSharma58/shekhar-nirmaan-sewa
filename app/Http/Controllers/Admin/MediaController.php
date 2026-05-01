@@ -17,15 +17,25 @@ class MediaController extends Controller
     public function store(Request $request)
     {
         $request->validate(['files.*' => 'required|image|max:5120']);
+        $rows = [];
+        $now = now();
+
         foreach ($request->file('files') as $file) {
             $path = $file->store('media', 'public');
-            \App\Models\Media::create([
+            $rows[] = [
                 'file_name' => $file->getClientOriginalName(),
                 'file_path' => $path,
                 'file_size' => $file->getSize(),
                 'mime_type' => $file->getMimeType(),
-            ]);
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
+
+        if (!empty($rows)) {
+            \App\Models\Media::insert($rows);
+        }
+
         return back()->with('success', count($request->file('files')) . ' file(s) uploaded!');
     }
 

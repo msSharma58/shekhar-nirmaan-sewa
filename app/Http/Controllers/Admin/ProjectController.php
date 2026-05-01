@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 
@@ -59,6 +60,8 @@ class ProjectController extends Controller
 
         $data['is_featured'] = $request->boolean('is_featured');
         Project::create($data);
+        Cache::forget('home.index.payload');
+        Cache::forget('admin.dashboard.stats');
 
         return redirect()->route('admin.projects.index')->with('success', 'Project added successfully!');
     }
@@ -123,6 +126,8 @@ class ProjectController extends Controller
         $data['is_featured'] = $request->boolean('is_featured');
 
         $project->update($data);
+        Cache::forget('home.index.payload');
+        Cache::forget('admin.dashboard.stats');
 
         return redirect()->route('admin.projects.index')->with('success', 'Project updated!');
     }
@@ -138,12 +143,16 @@ class ProjectController extends Controller
             }
         }
         $project->delete();
+        Cache::forget('home.index.payload');
+        Cache::forget('admin.dashboard.stats');
         return back()->with('success', 'Project deleted.');
     }
 
     public function toggle(Project $project)
     {
         $project->update(['is_featured' => !$project->is_featured]);
+        Cache::forget('home.index.payload');
+        Cache::forget('admin.dashboard.stats');
         return back();
     }
 }
