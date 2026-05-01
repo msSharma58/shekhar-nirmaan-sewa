@@ -10,7 +10,7 @@ This is a Laravel 13 starter application with a Vite/Tailwind front end. The sou
 - Most controllers are empty scaffolds; do not assume complete CRUD or route wiring exists.
 
 ## Data model domain
-- `database/migrations/2026_04_29_045613_create_projects_table.php` defines a realistic project domain with `title`, `location`, `category`, `status`, `image`, `description`, `featured`, and `completion_date`.
+- `database/migrations/2026_04_29_045613_create_projects_table.php` defines a realistic project domain with `title`, `location`, `category`, `status`, `image`, `description`, `is_featured`, and `completion_date`.
 - `database/migrations/2026_04_29_045613_create_quotes_table.php` defines a quote/contact workflow with `name`, `phone`, `email`, `service`, `message`, and `status`.
 - Other migrations for `services`, `messages`, `testimonials`, and `settings` are mostly empty tables.
 

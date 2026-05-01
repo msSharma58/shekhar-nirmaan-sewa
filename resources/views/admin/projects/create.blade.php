@@ -61,7 +61,7 @@
     </div>
 
     <div class="c-card" style="margin-bottom:20px;">
-      <div class="c-card-head"><div class="c-card-title">Project Image</div></div>
+      <div class="c-card-head"><div class="c-card-title">Project Thumbnail</div></div>
       <div class="c-card-body">
 
         <div class="img-upload" id="dropZone" onclick="document.getElementById('imageFile').click()">
@@ -86,6 +86,19 @@
         </div>
 
         @error('image')<div class="field-error" style="margin-top:8px;">{{ $message }}</div>@enderror
+      </div>
+    </div>
+
+    <div class="c-card" style="margin-bottom:20px;">
+      <div class="c-card-head"><div class="c-card-title">Project Gallery Images</div></div>
+      <div class="c-card-body">
+        <div class="form-group2">
+          <label>Upload Multiple Images</label>
+          <input type="file" name="gallery_images[]" id="galleryImages" accept="image/*" multiple>
+          <small style="display:block;margin-top:8px;color:var(--muted);">You can select multiple images. These will appear on the project detail page.</small>
+          @error('gallery_images')<div class="field-error" style="margin-top:8px;">{{ $message }}</div>@enderror
+          @error('gallery_images.*')<div class="field-error" style="margin-top:8px;">{{ $message }}</div>@enderror
+        </div>
       </div>
     </div>
 

@@ -60,7 +60,7 @@
     </div>
 
     <div class="c-card" style="margin-bottom:20px;">
-      <div class="c-card-head"><div class="c-card-title">Project Image</div></div>
+      <div class="c-card-head"><div class="c-card-title">Project Thumbnail</div></div>
       <div class="c-card-body">
 
         {{-- Current Image --}}
@@ -97,6 +97,40 @@
         </div>
 
         @error('image')<div class="field-error" style="margin-top:8px;">{{ $message }}</div>@enderror
+      </div>
+    </div>
+
+    <div class="c-card" style="margin-bottom:20px;">
+      <div class="c-card-head"><div class="c-card-title">Project Gallery Images</div></div>
+      <div class="c-card-body">
+        @if(!empty($project->gallery_images))
+          <div style="margin-bottom:16px;">
+            <div style="font-family:var(--font-c);font-size:.7rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Current Gallery</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">
+              @foreach($project->gallery_images as $galleryImage)
+                <label style="position:relative;display:block;cursor:pointer;">
+                  <img
+                    src="{{ Str::startsWith($galleryImage, 'http') ? $galleryImage : Storage::url($galleryImage) }}"
+                    alt="Project gallery image"
+                    style="width:100%;height:100px;object-fit:cover;border:1px solid var(--border2);"
+                    onerror="this.style.display='none'"
+                  >
+                  <span style="position:absolute;top:6px;left:6px;background:rgba(13,13,13,.85);color:var(--white);font-size:.7rem;padding:3px 8px;border:1px solid var(--border2);">Remove</span>
+                  <input type="checkbox" name="remove_gallery_images[]" value="{{ $galleryImage }}" style="position:absolute;top:8px;right:8px;width:16px;height:16px;accent-color:var(--orange);">
+                </label>
+              @endforeach
+            </div>
+            <small style="display:block;margin-top:8px;color:var(--muted);">Select image(s) to remove, then click Update Project.</small>
+          </div>
+        @endif
+
+        <div class="form-group2">
+          <label>Upload Additional Gallery Images</label>
+          <input type="file" name="gallery_images[]" id="galleryImages" accept="image/*" multiple>
+          <small style="display:block;margin-top:8px;color:var(--muted);">New uploads will be added to the existing gallery.</small>
+          @error('gallery_images')<div class="field-error" style="margin-top:8px;">{{ $message }}</div>@enderror
+          @error('gallery_images.*')<div class="field-error" style="margin-top:8px;">{{ $message }}</div>@enderror
+        </div>
       </div>
     </div>
 

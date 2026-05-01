@@ -16,4 +16,16 @@ class HomeController extends Controller
 
         return view('home', compact('services', 'projects', 'testimonials'));
     }
+
+    public function projectShow(Project $project)
+    {
+        $relatedProjects = Project::query()
+            ->where('id', '!=', $project->id)
+            ->where('category', $project->category)
+            ->latest()
+            ->take(3)
+            ->get();
+
+        return view('projects.show', compact('project', 'relatedProjects'));
+    }
 }

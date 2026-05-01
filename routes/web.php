@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\{
 };
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/projects/{project}', [HomeController::class, 'projectShow'])->name('projects.show');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
 // ── Public: Admin Login ──

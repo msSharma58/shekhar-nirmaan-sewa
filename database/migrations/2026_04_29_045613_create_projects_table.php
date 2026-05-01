@@ -19,7 +19,7 @@ return new class extends Migration
             $table->enum('status',   ['completed','ongoing','planning'])->default('planning');
             $table->string('image_url')->nullable();
             $table->text('description')->nullable();
-            $table->boolean('featured')->default(true);
+            $table->boolean('is_featured')->default(true);
             $table->date('completion_date')->nullable();
             $table->timestamps();
         });

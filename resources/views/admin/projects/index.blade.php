@@ -71,6 +71,7 @@
           <td style="color:var(--muted);font-size:.8rem">{{ $project->created_at->format('M Y') }}</td>
           <td>
             <div style="display:flex;gap:4px;">
+              <a href="{{ route('admin.projects.show', $project) }}" class="act-btn" title="View"><i class="fas fa-eye"></i></a>
               <a href="{{ route('admin.projects.edit', $project) }}" class="act-btn" title="Edit"><i class="fas fa-pen"></i></a>
               <form action="{{ route('admin.projects.destroy', $project) }}" method="POST" onsubmit="return confirm('Delete this project?')">
                 @csrf @method('DELETE')

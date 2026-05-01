@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends Controller
 {
-   public function index()
+    public function index()
     {
         $projects = Project::query()
             ->when(request('category'), fn($q, $v) => $q->where('category', $v))
@@ -20,6 +20,11 @@ class ProjectController extends Controller
     }
 
     public function create() { return view('admin.projects.create'); }
+
+    public function show(Project $project)
+    {
+        return view('admin.projects.show', compact('project'));
+    }
 
     public function store(Request $request)
     {
@@ -31,14 +36,25 @@ class ProjectController extends Controller
             'status'      => 'nullable|in:completed,ongoing,planning',
             'is_featured' => 'nullable|boolean',
             'image'       => 'nullable|image|max:5120',
+            'gallery_images'   => 'nullable|array',
+            'gallery_images.*' => 'image|max:5120',
+            'remove_gallery_images'   => 'nullable|array',
+            'remove_gallery_images.*' => 'string',
             'image_url_external' => 'nullable|url',
         ]);
 
         // Handle file upload
         if ($request->hasFile('image')) {
-                $data['image_url'] = $request->file('image')->store('projects', 'public');
+            $data['image_url'] = $request->file('image')->store('projects', 'public');
         } elseif ($request->filled('image_url_external')) {
             $data['image_url'] = $request->image_url_external;
+        }
+
+        if ($request->hasFile('gallery_images')) {
+            $data['gallery_images'] = collect($request->file('gallery_images'))
+                ->map(fn($file) => $file->store('projects/gallery', 'public'))
+                ->values()
+                ->all();
         }
 
         $data['is_featured'] = $request->boolean('is_featured');
@@ -62,6 +78,8 @@ class ProjectController extends Controller
             'status'      => 'nullable|in:completed,ongoing,planning',
             'is_featured' => 'nullable|boolean',
             'image'       => 'nullable|image|max:5120',
+            'gallery_images'   => 'nullable|array',
+            'gallery_images.*' => 'image|max:5120',
             'image_url_external' => 'nullable|url',
         ]);
         if ($request->hasFile('image')) {
@@ -74,7 +92,36 @@ class ProjectController extends Controller
             $data['image_url'] = $request->image_url_external;
         }
 
+        $existingGalleryImages = collect($project->gallery_images ?? []);
+        $removeRequested = collect($request->input('remove_gallery_images', []));
+        $imagesToRemove = $existingGalleryImages
+            ->filter(fn($imagePath) => $removeRequested->contains($imagePath))
+            ->values();
+
+        if ($request->hasFile('gallery_images') || $imagesToRemove->isNotEmpty()) {
+            foreach ($imagesToRemove as $imageToRemove) {
+                if (!str_starts_with($imageToRemove, 'http')) {
+                    Storage::disk('public')->delete($imageToRemove);
+                }
+            }
+
+            $remainingGalleryImages = $existingGalleryImages
+                ->reject(fn($imagePath) => $imagesToRemove->contains($imagePath))
+                ->values();
+
+            if ($request->hasFile('gallery_images')) {
+                $newGalleryImages = collect($request->file('gallery_images'))
+                    ->map(fn($file) => $file->store('projects/gallery', 'public'))
+                    ->values();
+
+                $remainingGalleryImages = $remainingGalleryImages->concat($newGalleryImages)->values();
+            }
+
+            $data['gallery_images'] = $remainingGalleryImages->all();
+        }
+
         $data['is_featured'] = $request->boolean('is_featured');
+
         $project->update($data);
 
         return redirect()->route('admin.projects.index')->with('success', 'Project updated!');
@@ -84,6 +131,11 @@ class ProjectController extends Controller
     {
         if ($project->image_url && !str_starts_with($project->image_url, 'http')) {
             Storage::disk('public')->delete($project->image_url);
+        }
+        foreach (($project->gallery_images ?? []) as $galleryImage) {
+            if (!str_starts_with($galleryImage, 'http')) {
+                Storage::disk('public')->delete($galleryImage);
+            }
         }
         $project->delete();
         return back()->with('success', 'Project deleted.');

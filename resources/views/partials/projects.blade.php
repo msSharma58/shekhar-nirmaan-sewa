@@ -14,16 +14,16 @@
 
   <div class="projects-grid">
     @foreach($projects as $project)
-    <div class="project-card" data-cat="{{ $project->category }}">
+    <a class="project-card" data-cat="{{ $project->category }}" href="{{ route('projects.show', $project) }}">
       <img
-        src="{{ Str::startsWith($project->image_url, 'http') ? $project->image_url : Storage::url($project->image_url) }}"
+        src="{{ $project->image_url ? (Str::startsWith($project->image_url, 'http') ? $project->image_url : Storage::url($project->image_url)) : 'https://via.placeholder.com/1200x800?text=Project' }}"
         alt="{{ $project->title }}"
       >
       <div class="project-overlay">
         <div class="proj-cat">{{ ucfirst($project->category) }}</div>
         <div class="proj-name">{{ $project->title }}</div>
       </div>
-    </div>
+    </a>
     @endforeach
   </div>
 </section>
