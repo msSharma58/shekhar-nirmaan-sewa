@@ -1,0 +1,105 @@
+/* ============================================
+   SHEKHAR NIRMAN SEWA — Shared Design Tokens
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700&family=Barlow+Condensed:wght@400;600;700&display=swap');
+
+:root {
+  /* Colors */
+  --black:        #0d0d0d;
+  --dark:         #111111;
+  --card:         #1a1a1a;
+  --card2:        #1e1e1e;
+  --sidebar:      #0f0f0f;
+  --orange:       #e8742a;
+  --orange-light: #f0913e;
+  --orange-dim:   rgba(232,116,42,0.12);
+  --white:        #f5f0eb;
+  --muted:        #8a8a8a;
+  --border:       rgba(255,255,255,0.07);
+  --border2:      rgba(255,255,255,0.11);
+
+  /* Status */
+  --success:     #3dba6f;
+  --success-dim: rgba(61,186,111,0.12);
+  --danger:      #e05252;
+  --danger-dim:  rgba(224,82,82,0.12);
+  --info:        #4a9edd;
+  --info-dim:    rgba(74,158,221,0.12);
+  --warning:     #e8b42a;
+  --warning-dim: rgba(232,180,42,0.12);
+
+  /* Typography */
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-cond:    'Barlow Condensed', sans-serif;
+  --font-body:    'Barlow', sans-serif;
+
+  /* Layout */
+  --sidebar-w:   260px;
+  --topbar-h:    62px;
+  --radius:      2px;
+}
+
+/* ── RESET ── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--dark); color:var(--white); font-family:var(--font-body); font-weight:400; overflow-x:hidden; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--orange); border-radius:2px; }
+
+/* ── TYPOGRAPHY UTILITIES ── */
+.font-display { font-family:var(--font-display); }
+.font-cond    { font-family:var(--font-cond); }
+.text-orange  { color:var(--orange); }
+.text-muted   { color:var(--muted); }
+.text-white   { color:var(--white); }
+
+/* ── SECTION TAG ── */
+.sec-tag {
+  display:inline-flex; align-items:center; gap:12px;
+  font-family:var(--font-cond); font-size:.75rem;
+  letter-spacing:4px; text-transform:uppercase; color:var(--orange);
+  margin-bottom:18px;
+}
+.sec-tag::before { content:''; width:24px; height:1px; background:var(--orange); }
+
+/* ── SECTION TITLE ── */
+h2.sec-title {
+  font-family:var(--font-display);
+  font-size:clamp(2.4rem,5vw,4.2rem);
+  line-height:1; letter-spacing:1px; text-transform:uppercase;
+  margin-bottom:24px;
+}
+h2.sec-title span { color:var(--orange); }
+
+/* ── BUTTONS ── */
+.btn-primary {
+  background:var(--orange); color:var(--black);
+  padding:14px 34px; font-family:var(--font-cond);
+  font-size:.9rem; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+  text-decoration:none; display:inline-block;
+  clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
+  transition:background .25s, transform .2s; border:none; cursor:pointer;
+}
+.btn-primary:hover { background:var(--orange-light); transform:translateY(-2px); }
+
+.btn-outline {
+  border:1px solid rgba(245,240,235,.3); color:var(--white);
+  padding:14px 34px; font-family:var(--font-cond);
+  font-size:.9rem; font-weight:600; letter-spacing:2px; text-transform:uppercase;
+  text-decoration:none; display:inline-block;
+  transition:border-color .25s, color .25s;
+}
+.btn-outline:hover { border-color:var(--orange); color:var(--orange); }
+
+/* ── SHARED LOGO SVG (inline use) ── */
+.sns-logo-svg { height:54px; width:auto; }
+
+/* ── ANIMATIONS ── */
+.reveal { opacity:0; transform:translateY(36px); transition:opacity .7s ease, transform .7s ease; }
+.reveal.visible { opacity:1; transform:none; }
+
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
