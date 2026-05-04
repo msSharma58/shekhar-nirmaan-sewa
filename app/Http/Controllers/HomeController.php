@@ -47,11 +47,15 @@ class HomeController extends Controller
         $projects = collect($payload['projects'] ?? [])
             ->filter(fn ($p) => $p instanceof \App\Models\Project)
             ->values();
+
+        $testimonials = collect($payload['testimonials'] ?? [])
+            ->filter(fn ($t) => $t instanceof \App\Models\Testimonial)
+            ->values();    
     
         return view('home', [
             'services'     => $services,
             'projects'     => $projects,
-            'testimonials' => $payload['testimonials'] ?? collect(),
+            'testimonials' => $payload['testimonials'],
         ]);
     }
 
