@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Service;
 use App\Models\Project;
 use App\Models\Testimonial;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
@@ -28,10 +29,25 @@ class HomeController extends Controller
             ];
         });
 
+        $services = $this->normalizeServices($payload['services'] ?? null);
+        if ($services->isEmpty()) {
+            $services = Service::query()
+                ->select(['id', 'title', 'description', 'icon', 'sort_order'])
+                ->orderBy('sort_order')
+                ->get()
+                ->map(fn (Service $service) => (object) [
+                    'icon' => $service->icon,
+                    'title' => $service->title,
+                    'description' => $service->description,
+                ]);
+
+            Cache::forget('home.index.payload');
+        }
+
         return view('home', [
-            'services' => $payload['services'],
-            'projects' => $payload['projects'],
-            'testimonials' => $payload['testimonials'],
+            'services' => $services,
+            'projects' => $payload['projects'] ?? collect(),
+            'testimonials' => $payload['testimonials'] ?? collect(),
         ]);
     }
 
@@ -45,5 +61,31 @@ class HomeController extends Controller
             ->get();
 
         return view('projects.show', compact('project', 'relatedProjects'));
+    }
+
+    private function normalizeServices(mixed $services): Collection
+    {
+        return collect($services)
+            ->map(function ($service) {
+                if ($service instanceof Service) {
+                    return (object) [
+                        'icon' => $service->icon,
+                        'title' => $service->title,
+                        'description' => $service->description,
+                    ];
+                }
+
+                if (is_array($service) || is_object($service)) {
+                    return (object) [
+                        'icon' => data_get($service, 'icon'),
+                        'title' => data_get($service, 'title'),
+                        'description' => data_get($service, 'description'),
+                    ];
+                }
+
+                return null;
+            })
+            ->filter(fn ($service) => filled($service?->title) || filled($service?->description) || filled($service?->icon))
+            ->values();
     }
 }

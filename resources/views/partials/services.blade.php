@@ -7,9 +7,9 @@
     @foreach($services as $service)
     <div class="service-card reveal">
       <div class="service-num">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</div>
-      <div class="service-icon"><i class="{{ $service->icon }}"></i></div>
-      <div class="service-title">{{ $service->title }}</div>
-      <p class="service-desc">{{ $service->description }}</p>
+      <div class="service-icon"><i class="{{ data_get($service, 'icon', 'fas fa-tools') }}"></i></div>
+      <div class="service-title">{{ data_get($service, 'title', 'Service') }}</div>
+      <p class="service-desc">{{ data_get($service, 'description', '') }}</p>
     </div>
     @endforeach
   </div>
