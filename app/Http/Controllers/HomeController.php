@@ -69,7 +69,7 @@ class HomeController extends Controller
             ->where('category', $project->category)
             ->latest()
             ->take(3)
-            ->get();
+            ->get(); 
 
         return view('projects.show', compact('project', 'relatedProjects'));
     }

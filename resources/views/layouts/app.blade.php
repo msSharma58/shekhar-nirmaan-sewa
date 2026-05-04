@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body>
-
+<script src="https://id-preview--9f4815ea-f792-44ff-aaf6-af607ef7b35f.lovable.app/widget.js" data-agent-id="bfc4f310-0dfc-46dc-8516-53bf5e6c462f" async></script>
 @include('partials.navbar')
 @include('partials.mobile-menu')
 
