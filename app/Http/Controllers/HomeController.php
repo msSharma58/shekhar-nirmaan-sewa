@@ -56,9 +56,9 @@ class HomeController extends Controller
         //     ->values();    
     
         return view('home', [
-            'services'     => $services,
-            'projects'     => $projects,
-            'testimonials' => $payload['testimonials'],
+            'services'     => collect($payload['services'] ?? []),
+            'projects'     => collect($payload['projects'] ?? []),
+            'testimonials' => collect($payload['testimonials'] ?? []),
         ]);
     }
 
