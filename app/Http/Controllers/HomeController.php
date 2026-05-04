@@ -17,40 +17,43 @@ class HomeController extends Controller
                 'services' => Service::query()
                     ->select(['id', 'title', 'description', 'icon', 'sort_order'])
                     ->orderBy('sort_order')
-                    ->get(),
+                    ->get()
+                    ->toArray(),
                 'projects' => Project::query()
                     ->select(['id', 'title', 'category', 'location', 'image_url', 'created_at'])
                     ->orderByDesc('created_at')
-                    ->get(),
+                    ->get()
+                    ->toArray(),
                 'testimonials' => Testimonial::query()
-                    ->select(['id', 'name', 'location', 'message', 'rating', 'is_active', 'created_at'])
+                    ->select(['id', 'name', 'location', 'message', 'rating'])
                     ->where('is_active', true)
-                    ->get(),
+                    ->get()
+                    ->toArray(),
             ];
         });
     
-        $services = $this->normalizeServices($payload['services'] ?? null);
-        if ($services->isEmpty()) {
-            $services = Service::query()
-                ->select(['id', 'title', 'description', 'icon', 'sort_order'])
-                ->orderBy('sort_order')
-                ->get()
-                ->map(fn (Service $service) => (object) [
-                    'icon' => $service->icon,
-                    'title' => $service->title,
-                    'description' => $service->description,
-                ]);
+        // $services = $this->normalizeServices($payload['services'] ?? null);
+        // if ($services->isEmpty()) {
+        //     $services = Service::query()
+        //         ->select(['id', 'title', 'description', 'icon', 'sort_order'])
+        //         ->orderBy('sort_order')
+        //         ->get()
+        //         ->map(fn (Service $service) => (object) [
+        //             'icon' => $service->icon,
+        //             'title' => $service->title,
+        //             'description' => $service->description,
+        //         ]);
     
-            Cache::forget('home.index.payload');
-        }
+        //     Cache::forget('home.index.payload');
+        // }
     
-        $projects = collect($payload['projects'] ?? [])
-            ->filter(fn ($p) => $p instanceof \App\Models\Project)
-            ->values();
+        // $projects = collect($payload['projects'] ?? [])
+        //     ->filter(fn ($p) => $p instanceof \App\Models\Project)
+        //     ->values();
 
-        $testimonials = collect($payload['testimonials'] ?? [])
-            ->filter(fn ($t) => $t instanceof \App\Models\Testimonial)
-            ->values();    
+        // $testimonials = collect($payload['testimonials'] ?? [])
+        //     ->filter(fn ($t) => $t instanceof \App\Models\Testimonial)
+        //     ->values();    
     
         return view('home', [
             'services'     => $services,

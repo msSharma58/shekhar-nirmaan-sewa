@@ -14,22 +14,20 @@
 
   <div class="projects-grid">
     @foreach($projects as $project)
-    @php
-      $thumbPath = $project->image_url
-        ? (pathinfo($project->image_url, PATHINFO_DIRNAME) === '.'
-            ? pathinfo($project->image_url, PATHINFO_FILENAME).'_thumb.webp'
-            : pathinfo($project->image_url, PATHINFO_DIRNAME).'/'.pathinfo($project->image_url, PATHINFO_FILENAME).'_thumb.webp')
-        : null;
-    @endphp
-    <a class="project-card" data-cat="{{ $project->category }}" href="{{ route('projects.show', $project) }}">
+    <a class="project-card"
+       data-cat="{{ data_get($project, 'category') }}"
+       href="{{ route('projects.show', data_get($project, 'id')) }}">
       <img
-        src="{{ $project->image_url ? (str_starts_with($project->image_url, 'http') ? $project->image_url : Storage::url($thumbPath)) : 'https://via.placeholder.com/1200x800?text=Project' }}"
-        alt="{{ $project->title }}"
-        onerror="this.onerror=null;this.src='{{ $project->image_url ? (str_starts_with($project->image_url, 'http') ? $project->image_url : Storage::url($project->image_url)) : 'https://via.placeholder.com/1200x800?text=Project' }}'"
+        src="{{ data_get($project, 'image_url')
+          ? (Str::startsWith(data_get($project, 'image_url'), 'http')
+              ? data_get($project, 'image_url')
+              : Storage::url(data_get($project, 'image_url')))
+          : 'https://via.placeholder.com/1200x800?text=Project' }}"
+        alt="{{ data_get($project, 'title') }}"
       >
       <div class="project-overlay">
-        <div class="proj-cat">{{ ucfirst($project->category) }}</div>
-        <div class="proj-name">{{ $project->title }}</div>
+        <div class="proj-cat">{{ ucfirst(data_get($project, 'category')) }}</div>
+        <div class="proj-name">{{ data_get($project, 'title') }}</div>
       </div>
     </a>
     @endforeach

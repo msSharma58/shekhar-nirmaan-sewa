@@ -8,12 +8,12 @@
       @foreach($testimonials as $testimonial)
       <div class="testi-card">
         <div class="quote-icon"><i class="fas fa-quote-left"></i></div>
-        <p class="testi-text">"{{ $testimonial->message }}"</p>
+        <p class="testi-text">"{{ data_get($testimonial, 'message') }}"</p>
         <div class="stars">
-          @for($i = 0; $i < $testimonial->rating; $i++)★@endfor
+          @for($i = 0; $i < data_get($testimonial, 'rating', 5); $i++)★@endfor
         </div>
-        <div class="testi-author">{{ $testimonial->name }}</div>
-        <div class="testi-loc">{{ $testimonial->location }}</div>
+        <div class="testi-author">{{ data_get($testimonial, 'name') }}</div>
+        <div class="testi-loc">{{ data_get($testimonial, 'location') }}</div>
       </div>
       @endforeach
     </div>
