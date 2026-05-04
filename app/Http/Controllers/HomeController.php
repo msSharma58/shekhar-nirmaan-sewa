@@ -28,7 +28,7 @@ class HomeController extends Controller
                     ->get(),
             ];
         });
-
+    
         $services = $this->normalizeServices($payload['services'] ?? null);
         if ($services->isEmpty()) {
             $services = Service::query()
@@ -40,13 +40,17 @@ class HomeController extends Controller
                     'title' => $service->title,
                     'description' => $service->description,
                 ]);
-
+    
             Cache::forget('home.index.payload');
         }
-
+    
+        $projects = collect($payload['projects'] ?? [])
+            ->filter(fn ($p) => $p instanceof \App\Models\Project)
+            ->values();
+    
         return view('home', [
-            'services' => $services,
-            'projects' => $payload['projects'] ?? collect(),
+            'services'     => $services,
+            'projects'     => $projects,
             'testimonials' => $payload['testimonials'] ?? collect(),
         ]);
     }
